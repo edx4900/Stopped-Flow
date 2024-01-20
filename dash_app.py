@@ -3,6 +3,7 @@ import plotting_dash
 from dash import Dash, dcc, html, Input, Output, State
 import plotly.graph_objs as go
 import dash
+import numpy as np
 
 def create_dash_app(key):
     app = Dash(__name__)
@@ -19,53 +20,48 @@ def create_dash_app(key):
         dcc.Dropdown(id='solvent-dropdown', placeholder='Select a solvent'),
         dcc.Dropdown(id='substrate-concentration-dropdown', placeholder='Select substrate concentration'),
         dcc.Graph(id='plot-area'),
+        dcc.RangeSlider(id='time-slider', min=0, max=1, value=[0, 1], step=0.01, marks={0: '0', 1: '1'}, disabled=True),
         html.Button('Previous', id='previous-button', disabled=True),
         html.Button('Next', id='next-button', disabled=True)
     ])
 
-    # Callback to update pH dropdown based on selected substrate
+    # Callback to update dropdowns based on selected substrate
     @app.callback(
-        Output('ph-dropdown', 'options'),
-        Input('substrate-dropdown', 'value')
+        [Output('ph-dropdown', 'options'),
+         Output('solvent-dropdown', 'options'),
+         Output('substrate-concentration-dropdown', 'options')],
+        [Input('substrate-dropdown', 'value')]
     )
-    def update_dropdown(selected_substrate, column_name, output_id):
+    def update_dropdowns(selected_substrate):
         if not selected_substrate:
-            return []
+            return [], [], []
         filtered_data = key[key['substrate'] == selected_substrate]
-        values = filtered_data[column_name].unique().tolist()
-        values.sort()
-        return [{'label': value, 'value': value} for value in values]
-
-    # Callback to update pH dropdown based on selected substrate
-    @app.callback(
-        Output('ph-dropdown', 'options'),
-        Input('substrate-dropdown', 'value')
-    )
-    def update_ph_dropdown(selected_substrate):
-        return update_dropdown(selected_substrate, 'pH', 'ph-dropdown')
-
-    # Callback to update solvent dropdown based on selected substrate
-    @app.callback(
-        Output('solvent-dropdown', 'options'),
-        Input('substrate-dropdown', 'value')
-    )
-    def update_solvent_dropdown(selected_substrate):
-        return update_dropdown(selected_substrate, 'solvent', 'solvent-dropdown')
-
-    # Callback to update substrate concentration dropdown based on selected substrate
-    @app.callback(
-        Output('substrate-concentration-dropdown', 'options'),
-        Input('substrate-dropdown', 'value')
-    )
-    def update_concentration_dropdown(selected_substrate):
-        return update_dropdown(selected_substrate, 'substrate_concentration', 'substrate-concentration-dropdown')
-    # Modified callback to also control the disabled state of buttons
+        
+        ph_values = filtered_data['pH'].unique().tolist()
+        ph_values.sort()
+        ph_options = [{'label': ph, 'value': ph} for ph in ph_values]
+        
+        solvents = filtered_data['solvent'].unique().tolist()
+        solvents.sort()
+        solvent_options = [{'label': solvent, 'value': solvent} for solvent in solvents]
+        
+        concentrations = filtered_data['substrate_concentration'].unique().tolist()
+        concentrations.sort()
+        concentration_options = [{'label': c, 'value': c} for c in concentrations]
+        
+        return ph_options, solvent_options, concentration_options
+    
     @app.callback(
         [
             Output('plot-area', 'figure'),
             Output('current-index', 'data'),
             Output('previous-button', 'disabled'),
-            Output('next-button', 'disabled')
+            Output('next-button', 'disabled'),
+            Output('time-slider', 'min'),
+            Output('time-slider', 'max'),
+            Output('time-slider', 'value'),
+            Output('time-slider', 'marks'),
+            Output('time-slider', 'disabled')
         ],
         [
             Input('substrate-dropdown', 'value'),
@@ -73,36 +69,65 @@ def create_dash_app(key):
             Input('solvent-dropdown', 'value'),
             Input('substrate-concentration-dropdown', 'value'),
             Input('previous-button', 'n_clicks'),
-            Input('next-button', 'n_clicks')
+            Input('next-button', 'n_clicks'),
+            Input('time-slider', 'value')
         ],
-    State('current-index', 'data')
+        State('current-index', 'data')
     )
-    def update_plot(selected_substrate, selected_ph, selected_solvent, selected_concentration, prev_clicks, next_clicks, current_index_data):
+    def update_plot(selected_substrate, selected_ph, selected_solvent, selected_concentration, prev_clicks, next_clicks, slider_value, current_index_data):
         ctx = dash.callback_context
 
-        if not ctx.triggered or not selected_substrate or not selected_ph or not selected_solvent or not selected_concentration:
-            # Return an empty figure, the current index, and default disabled states for the buttons
-            return go.Figure(), current_index_data, True, True
+        # Initialize an empty figure and default values for the slider
+        fig = go.Figure()
+        min_time = 0
+        max_time = 1
+        slider_marks = {0: '0', 1: '1'}
+        slider_disabled = True
 
         # Retrieve the current experiment index
         current_index = current_index_data['index']
 
         # Determine if navigation button was pressed
-        if ctx.triggered[0]['prop_id'] == 'previous-button.n_clicks' and current_index > 0:
-            current_index -= 1
-        elif ctx.triggered[0]['prop_id'] == 'next-button.n_clicks':
-            current_index += 1
+        if ctx.triggered:
+            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+            if button_id == 'previous-button' and current_index > 0:
+                current_index -= 1
+            elif button_id == 'next-button':
+                current_index += 1
 
-        # Update plot based on the current experiment index
-        # Assuming plotting_dash.plot_wavelength_vs_intensity_dash can handle an index parameter
-        fig = plotting_dash.plot_wavelength_vs_intensity_dash(
-            key,
-            substrate=selected_substrate,
-            pH=selected_ph,
-            solvent=selected_solvent,
-            substrate_concentration=selected_concentration,
-            index=current_index  # Add index parameter to your plotting function
-        )
+        # Check if all dropdowns have a value selected
+        if selected_substrate and selected_ph and selected_solvent and selected_concentration:
+            # Get the time range for the experiment
+            time_range = plotting_dash.get_time_range_for_experiment(
+                key,
+                substrate=selected_substrate,
+                pH=selected_ph,
+                solvent=selected_solvent,
+                substrate_concentration=selected_concentration,
+                index=current_index
+            )
+
+            if time_range:
+                min_time, max_time = time_range
+                # Adjust the slider marks based on the time range to avoid clutter
+                step = (int(max_time) - int(min_time)) // 10 or 1
+                slider_marks = {i: str(i) for i in range(int(min_time), int(max_time) + 1, int(step))}
+                slider_disabled = False
+
+                # Only update slider_value if the dropdowns or navigation buttons triggered the callback
+                if not ctx.triggered or (ctx.triggered and 'time-slider' not in button_id):
+                    slider_value = [min_time, max_time]
+
+            # Update plot based on the current experiment index and slider value
+            fig = plotting_dash.plot_wavelength_vs_intensity_dash(
+                key,
+                substrate=selected_substrate,
+                pH=selected_ph,
+                solvent=selected_solvent,
+                substrate_concentration=selected_concentration,
+                time_range=slider_value,  # Pass the slider value as the time range
+                index=current_index
+            )
 
         # Determine the number of available spectra
         num_spectra = len(key[(key['substrate'] == selected_substrate) & 
@@ -114,8 +139,8 @@ def create_dash_app(key):
         disable_previous = current_index <= 0
         disable_next = current_index >= num_spectra - 1
 
-        return fig, {'index': current_index}, disable_previous, disable_next
-    
+        # Return the updated figure, index data, button states, and time slider properties
+        return fig, {'index': current_index}, disable_previous, disable_next, min_time, max_time, slider_value, slider_marks, slider_disabled
 
     return app
 
