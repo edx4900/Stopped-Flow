@@ -28,13 +28,21 @@ def create_dash_app(key):
         Output('ph-dropdown', 'options'),
         Input('substrate-dropdown', 'value')
     )
-    def update_ph_dropdown(selected_substrate):
+    def update_dropdown(selected_substrate, column_name, output_id):
         if not selected_substrate:
             return []
         filtered_data = key[key['substrate'] == selected_substrate]
-        ph_values = filtered_data['pH'].unique().tolist()
-        ph_values.sort()
-        return [{'label': ph, 'value': ph} for ph in ph_values]
+        values = filtered_data[column_name].unique().tolist()
+        values.sort()
+        return [{'label': value, 'value': value} for value in values]
+
+    # Callback to update pH dropdown based on selected substrate
+    @app.callback(
+        Output('ph-dropdown', 'options'),
+        Input('substrate-dropdown', 'value')
+    )
+    def update_ph_dropdown(selected_substrate):
+        return update_dropdown(selected_substrate, 'pH', 'ph-dropdown')
 
     # Callback to update solvent dropdown based on selected substrate
     @app.callback(
@@ -42,12 +50,7 @@ def create_dash_app(key):
         Input('substrate-dropdown', 'value')
     )
     def update_solvent_dropdown(selected_substrate):
-        if not selected_substrate:
-            return []
-        filtered_data = key[key['substrate'] == selected_substrate]
-        solvents = filtered_data['solvent'].unique().tolist()
-        solvents.sort()
-        return [{'label': solvent, 'value': solvent} for solvent in solvents]
+        return update_dropdown(selected_substrate, 'solvent', 'solvent-dropdown')
 
     # Callback to update substrate concentration dropdown based on selected substrate
     @app.callback(
@@ -55,13 +58,7 @@ def create_dash_app(key):
         Input('substrate-dropdown', 'value')
     )
     def update_concentration_dropdown(selected_substrate):
-        if not selected_substrate:
-            return []
-        filtered_data = key[key['substrate'] == selected_substrate]
-        concentrations = filtered_data['substrate_concentration'].unique().tolist()
-        concentrations.sort()
-        return [{'label': c, 'value': c} for c in concentrations]
-
+        return update_dropdown(selected_substrate, 'substrate_concentration', 'substrate-concentration-dropdown')
     # Modified callback to also control the disabled state of buttons
     @app.callback(
         [
