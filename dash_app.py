@@ -21,6 +21,7 @@ def create_dash_app(key):
         dcc.Dropdown(id='substrate-concentration-dropdown', placeholder='Select substrate concentration'),
         dcc.Graph(id='plot-area'),
         dcc.RangeSlider(id='time-slider', min=0, max=1, value=[0, 1], step=0.01, marks={0: '0', 1: '1'}, disabled=True),
+        dcc.Slider(id='time-step-slider', min=1, max=100, value=10, step=10, disabled=True),
         html.Button('Previous', id='previous-button', disabled=True),
         html.Button('Next', id='next-button', disabled=True)
     ])
@@ -61,7 +62,8 @@ def create_dash_app(key):
             Output('time-slider', 'max'),
             Output('time-slider', 'value'),
             Output('time-slider', 'marks'),
-            Output('time-slider', 'disabled')
+            Output('time-slider', 'disabled'),
+            Output('time-step-slider', 'disabled')
         ],
         [
             Input('substrate-dropdown', 'value'),
@@ -70,11 +72,12 @@ def create_dash_app(key):
             Input('substrate-concentration-dropdown', 'value'),
             Input('previous-button', 'n_clicks'),
             Input('next-button', 'n_clicks'),
-            Input('time-slider', 'value')
+            Input('time-slider', 'value'),
+            Input('time-step-slider', 'value')  # This should be an integer, not a dictionary
         ],
         State('current-index', 'data')
     )
-    def update_plot(selected_substrate, selected_ph, selected_solvent, selected_concentration, prev_clicks, next_clicks, slider_value, current_index_data):
+    def update_plot(selected_substrate, selected_ph, selected_solvent, selected_concentration, prev_clicks, next_clicks, slider_value, time_step_value, current_index_data):
         ctx = dash.callback_context
 
         # Initialize an empty figure and default values for the slider
@@ -126,6 +129,7 @@ def create_dash_app(key):
                 solvent=selected_solvent,
                 substrate_concentration=selected_concentration,
                 time_range=slider_value,  # Pass the slider value as the time range
+                time_step=time_step_value,
                 index=current_index
             )
 
@@ -139,8 +143,10 @@ def create_dash_app(key):
         disable_previous = current_index <= 0
         disable_next = current_index >= num_spectra - 1
 
+        time_step_slider_disabled = not (selected_substrate and selected_ph and selected_solvent and selected_concentration)
+
         # Return the updated figure, index data, button states, and time slider properties
-        return fig, {'index': current_index}, disable_previous, disable_next, min_time, max_time, slider_value, slider_marks, slider_disabled
+        return fig, {'index': current_index}, disable_previous, disable_next, min_time, max_time, slider_value, slider_marks, slider_disabled, time_step_slider_disabled 
 
     return app
 
