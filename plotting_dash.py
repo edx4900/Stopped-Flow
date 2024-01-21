@@ -20,7 +20,7 @@ def get_time_range_for_experiment(key, substrate, pH=None, substrate_concentrati
 
     return min_time, max_time
 
-def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concentration=None, solvent=None, index=None, time_step=10, time_range=None, specified_wavelengths=None, subtract_baseline_flag=False, wavelength_plotting_range=None):
+def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concentration=None, solvent=None, index=None, time_step=10, time_range=None, subtract_baseline_flag=False, wavelength_plotting_range=None):
     # Build the criteria dictionary with only non-None values
     criteria = {'substrate': substrate, 'pH': pH, 'substrate_concentration': substrate_concentration, 'solvent': solvent}
 
@@ -43,17 +43,17 @@ def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concent
     data['Time'] = pd.to_numeric(data['Time'], errors='coerce')
     data.dropna(subset=['Time'], inplace=True)
 
+    # Apply time cutoff and filtering
+    if time_range is not None:
+        start_time, time_cutoff = time_range
+        data = filter_by_time_cutoff(data, time_cutoff, start_time)
+
     # Baseline Subtraction if enabled
     if subtract_baseline_flag:
         baseline = find_baseline_for_push(key, experiment['push'])
         if baseline is not None:
             data = subtract_baseline(data, baseline)
     
-    # Apply time cutoff and filtering
-    if time_range is not None:
-        start_time, time_cutoff = time_range
-        data = filter_by_time_cutoff(data, time_cutoff, start_time)
-
     if not data.empty:
         time_min = data['Time'].min()
         time_max = data['Time'].max()

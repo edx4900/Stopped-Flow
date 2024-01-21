@@ -5,13 +5,17 @@ def find_baseline_for_push(key, push_number):
     """
     Find the baseline experiment for a given push number.
     
+    Parameters:
+    key (pd.DataFrame): The DataFrame containing the experiments.
+    push_number (str): The push identifier to match.
+    
     Returns:
     pd.Series: A pandas Series representing the averaged baseline data, or None if not found.
     """
     # Find the experiment with the given push number
     target_experiment = get_by_push(key, push_number)
 
-    if not target_experiment:
+    if target_experiment is None:
         # If the experiment with the given push number is not found
         print(f"No experiment found with push number {push_number}.")
         return None
@@ -25,27 +29,26 @@ def find_baseline_for_push(key, push_number):
     }
 
     # Find the baseline experiment
-    baseline = next((exp for exp in key if 
-                     exp['solvent'] == target_properties['solvent'] and
-                     exp['date'] == target_properties['date'] and
-                     exp['Ty'] == target_properties['Ty'] and
-                     exp['pH'] == target_properties['pH'] and
-                     exp['substrate'] == '-' and
-                     exp['substrate_concentration'] == '-'), None)
-    
-    if not baseline:
+    baseline = key[
+        (key['solvent'] == target_properties['solvent']) &
+        (key['date'] == target_properties['date']) &
+        (key['Ty'] == target_properties['Ty']) &
+        (key['pH'] == target_properties['pH']) &
+        (key['substrate'] == '-') &
+        (key['substrate_concentration'] == '-')
+    ]
+
+    if baseline.empty:
         # If no baseline experiment is found
         print("No baseline found matching the criteria.")
-    
+        return None
     else:
-        print(f"Baseline: {baseline['push']}")
+        # print(f"Baseline: {baseline['push'].values[0]}")
         # Assuming the data is a DataFrame within the baseline dict under the key 'data'
-        baseline_data = baseline['data']
+        baseline_data = baseline['data'].values[0]
         # Averaging each column (each wavelength) across all rows (time points), excluding 'Time'
         averaged_baseline = baseline_data.drop(columns=['Time']).mean()
         return averaged_baseline
-
-    return baseline
 
 def subtract_baseline(experiment_data, baseline):    
     # Check if baseline is a Series and not None
@@ -161,10 +164,16 @@ def get_by_push(key, push):
     """
     Get a single experiment from the key file that matches the specified push.
     """
-    for exp in key:
-        if exp['push'] == push:
-            return exp
-    return None
+    # Filter the DataFrame for the row with the matching 'push' value
+    filtered_df = key[key['push'] == push]
+
+    # Check if there is at least one match
+    if not filtered_df.empty:
+        # Return the first match as a Series
+        return filtered_df.iloc[0]
+    else:
+        # Return None if no match is found
+        return None
 
 def process_all_csv_files(directory_path, key_file_path):
     """

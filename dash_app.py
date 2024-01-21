@@ -22,6 +22,12 @@ def create_dash_app(key):
         dcc.Graph(id='plot-area'),
         dcc.RangeSlider(id='time-slider', min=0, max=1, value=[0, 1], step=0.01, marks={0: '0', 1: '1'}, disabled=True),
         dcc.Slider(id='time-step-slider', min=1, max=100, value=10, step=10, disabled=True),
+        dcc.Checklist(
+            id='baseline-toggle',
+            options=[{'label': 'Toggle Baseline', 'value': 'baseline'}],
+            value=[]
+        ),
+        dcc.Store(id='baseline-flag', data={'baseline': False}),  # Store for baseline flag
         html.Button('Previous', id='previous-button', disabled=True),
         html.Button('Next', id='next-button', disabled=True)
     ])
@@ -53,6 +59,13 @@ def create_dash_app(key):
         return ph_options, solvent_options, concentration_options
     
     @app.callback(
+        Output('baseline-flag', 'data'),
+        [Input('baseline-toggle', 'value')]
+    )
+    def update_baseline_flag(toggle_value):
+        return {'baseline': 'baseline' in toggle_value}
+        
+    @app.callback(
         [
             Output('plot-area', 'figure'),
             Output('current-index', 'data'),
@@ -73,11 +86,12 @@ def create_dash_app(key):
             Input('previous-button', 'n_clicks'),
             Input('next-button', 'n_clicks'),
             Input('time-slider', 'value'),
-            Input('time-step-slider', 'value')  # This should be an integer, not a dictionary
+            Input('time-step-slider', 'value'),
+            Input('baseline-flag', 'data') 
         ],
         State('current-index', 'data')
     )
-    def update_plot(selected_substrate, selected_ph, selected_solvent, selected_concentration, prev_clicks, next_clicks, slider_value, time_step_value, current_index_data):
+    def update_plot(selected_substrate, selected_ph, selected_solvent, selected_concentration, prev_clicks, next_clicks, slider_value, time_step_value, baseline_flag_data, current_index_data):
         ctx = dash.callback_context
 
         # Initialize an empty figure and default values for the slider
@@ -121,6 +135,9 @@ def create_dash_app(key):
                 if not ctx.triggered or (ctx.triggered and 'time-slider' not in button_id):
                     slider_value = [min_time, max_time]
 
+            # Use the baseline flag from the Store component
+            baseline_flag = baseline_flag_data['baseline']
+
             # Update plot based on the current experiment index and slider value
             fig = plotting_dash.plot_wavelength_vs_intensity_dash(
                 key,
@@ -130,7 +147,8 @@ def create_dash_app(key):
                 substrate_concentration=selected_concentration,
                 time_range=slider_value,  # Pass the slider value as the time range
                 time_step=time_step_value,
-                index=current_index
+                index=current_index,
+                subtract_baseline_flag=baseline_flag
             )
 
         # Determine the number of available spectra
