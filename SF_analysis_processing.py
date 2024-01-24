@@ -211,7 +211,7 @@ def filter_by_time_cutoff(data, time_cutoff, start_time=None):
     Filters the dataset to include only the data points where the time value 
     is less than or equal to the time_cutoff.
     """
-    # Ensure the 'Time' column is of type float for comparison
+    # Debugging: ensure the 'Time' column is of type float for comparison
     data['Time'] = data['Time'].astype(float)
 
     if start_time is not None:
