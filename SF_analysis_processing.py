@@ -150,7 +150,8 @@ def load_key_from_csv(key_csv_file_path):
     """
     Load the key data from a CSV file.
     """
-    return pd.read_csv(key_csv_file_path).to_dict(orient='records')
+    # return pd.read_csv(key_csv_file_path).to_dict(orient='records')
+    return pd.read_csv(key_csv_file_path)
 
 def get_experiments_by_criteria(key, **criteria):
     filtered_data = key
@@ -193,8 +194,13 @@ def process_all_csv_files(directory_path, key_file_path):
             print("Processed file:", file_name.replace('.csv', ''))
             # add the data to the experiment within the key array
             experiment = get_by_push(key, file_name.replace('.csv', ''))
-            if experiment:
-                experiment['data'] = processed_data
+            if experiment is not None:
+                # Check if 'data' column exists, if not, create it
+                if 'data' not in key.columns:
+                    key['data'] = None
+
+                # Assign the processed data to the 'data' column of the experiment
+                key.at[experiment.name, 'data'] = processed_data
 
     df = pd.DataFrame(key)
 

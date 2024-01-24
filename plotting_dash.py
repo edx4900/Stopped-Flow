@@ -110,3 +110,48 @@ def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concent
     )
 
     return fig
+
+
+def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=None, start_time=None):
+    """
+    Plots specified wavelength traces from the dataset using Plotly.
+    Args:
+    - key: The key structure containing the experiment data.
+    - push_number: The specific push number to plot data for.
+    - wavelengths: A list of desired wavelengths to plot.
+    """
+    # Find the experiment with the given push number
+    experiment = next((exp for exp in key if exp['push'] == push_number and 'data' in exp), None)
+    if experiment is None:
+        print(f"No data available for push number {push_number}.")
+        return
+
+    data = experiment['data']
+
+    # Apply time cutoff if specified
+    if time_cutoff is not None or start_time is not None:
+        filtered_data = filter_by_time_cutoff(data, time_cutoff, start_time)
+        if filtered_data is None:
+            return  # Stop the function if the filtered data is None
+        data = filtered_data
+
+    # Create a Plotly figure
+    fig = go.Figure()
+
+    # Plot each specified wavelength
+    for desired_wavelength in wavelengths:
+        # Find the closest actual wavelength to the desired one
+        closest_wavelength = find_closest_wavelength(data, desired_wavelength)
+
+        # Add the trace to the figure
+        fig.add_trace(go.Scatter(x=data['Time'], y=data[closest_wavelength], mode='lines', name=f"{closest_wavelength} nm"))
+
+    # Update the layout
+    fig.update_layout(
+        title=f"Wavelength Traces for Push Number {push_number}",
+        xaxis_title="Time",
+        yaxis_title="Intensity",
+        legend_title="Wavelength"
+    )
+
+    fig.show()
