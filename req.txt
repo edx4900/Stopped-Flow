@@ -6,3 +6,4 @@ scipy
 plotly
 dash
 nbformat
+dash_bootstrap_components
