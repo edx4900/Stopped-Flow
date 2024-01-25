@@ -1,4 +1,4 @@
-from SF_analysis_processing import *
+from data_analysis.SF_analysis_processing import *
 import plotly.express as px
 import plotly.graph_objs as go
 import pandas as pd

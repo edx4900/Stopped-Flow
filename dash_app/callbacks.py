@@ -1,7 +1,7 @@
 from dash.dependencies import Input, Output, State
 import dash
 import plotly.graph_objs as go
-import plotting_dash
+import data_analysis.plotting_dash as plotting_dash
 
 def register_callbacks(app, key):
     # Callback to update dropdowns based on selected substrate
