@@ -103,10 +103,20 @@ def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concent
 
     # Customize the layout of the Plotly figure
     fig.update_layout(
-        title=f"Experiment: {push_number} (Date: {experiment_date})",
+        title={
+            'text': f"Experiment: {push_number} (Date: {experiment_date})",
+            'font': {
+                'family': 'Times New Roman',
+                'size': 18
+        }
+    },
         xaxis_title="Wavelength (nm)",
         yaxis_title="Intensity",
         xaxis=dict(range=[first_wavelength, last_wavelength]),
+        font=dict(
+            family="Times New Roman",
+            size=12
+        )
     )
 
     return fig
@@ -121,7 +131,7 @@ def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=
     - wavelengths: A list of desired wavelengths to plot.
     """
     # Find the experiment with the given push number
-    experiment = next((exp for exp in key if exp['push'] == push_number and 'data' in exp), None)
+    experiment = key.loc[(key['push'] == push_number) & key['data'].notnull()].iloc[0]
     if experiment is None:
         print(f"No data available for push number {push_number}.")
         return
@@ -148,10 +158,19 @@ def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=
 
     # Update the layout
     fig.update_layout(
-        title=f"Wavelength Traces for Push Number {push_number}",
+        title={
+            'text': f"Wavelength Traces for {push_number}",
+            'font': {
+                'family': 'Times New Roman',
+                'size': 18
+            }
+        },
         xaxis_title="Time",
         yaxis_title="Intensity",
-        legend_title="Wavelength"
+        legend_title="Wavelength",
+        font=dict(
+            family="Times New Roman",
+            size=12
+        )
     )
-
-    fig.show()
+    return fig

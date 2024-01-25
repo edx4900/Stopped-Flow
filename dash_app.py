@@ -44,10 +44,10 @@ def create_dash_app(key):
             ], style={'position': 'relative'}),
             
             html.Div([
-                dcc.Input(id='wavelength-input', type='number', placeholder='Enter a wavelength'),
-                html.Button('Add Wavelength', id='add-wavelength-button'),
+                dcc.Input(id='wavelength-input', type='number', placeholder='Enter a wavelength', disabled=True),
+                html.Button('Add Wavelength Trace', id='add-wavelength-button', disabled=True),
                 dcc.Graph(id='wavelength-plot-area')
-            ])
+            ], style={'text-align': 'center', 'margin-top': '50px'})
         ], style={'display': 'grid', 'grid-template-columns': '1fr 1fr', 'margin-bottom': '20px'}),
 
         # Row for the sliders
@@ -94,6 +94,65 @@ def create_dash_app(key):
     )
     def update_baseline_flag(toggle_value):
         return {'baseline': 'baseline' in toggle_value}
+    
+    @app.callback(
+        [Output('wavelength-input', 'disabled'),
+        Output('add-wavelength-button', 'disabled')],
+        [Input('plot-area', 'figure')],
+        [State('substrate-dropdown', 'value'),
+        State('ph-dropdown', 'value'),
+        State('solvent-dropdown', 'value'),
+        State('substrate-concentration-dropdown', 'value')]
+    )
+    def enable_wavelength_input(plot_figure, selected_substrate, selected_ph, selected_solvent, selected_concentration):
+        # Check if data is available for plotting
+        data_available = False
+        if selected_substrate and selected_ph and selected_solvent and selected_concentration:
+            # Assuming 'key' is accessible here, or pass it as an argument
+            filtered_data = key[(key['substrate'] == selected_substrate) &
+                                (key['pH'] == selected_ph) &
+                                (key['solvent'] == selected_solvent) &
+                                (key['substrate_concentration'] == selected_concentration)]
+            data_available = not filtered_data.empty
+
+        # Enable input and button if data is available
+        return not data_available, not data_available
+    
+    # Callback to handle wavelength input and update the subplot
+    @app.callback(
+        Output('wavelength-plot-area', 'figure'),
+        [
+            Input('add-wavelength-button', 'n_clicks'),
+            Input('substrate-dropdown', 'value'),
+            Input('ph-dropdown', 'value'),
+            Input('solvent-dropdown', 'value'),
+            Input('substrate-concentration-dropdown', 'value'),
+            Input('time-slider', 'value'),
+            Input('baseline-flag', 'data'),
+            Input('current-index', 'data') # do i leave as state or make into an input? 
+        ],
+        [
+            State('wavelength-input', 'value'),
+        ]
+    )
+    def update_wavelength_plot(n_clicks, selected_substrate, selected_ph, selected_solvent, selected_concentration, slider_value, baseline_flag_data, current_index_data, wavelength):
+        # Initialize default states
+        fig = go.Figure()
+        # Get data for current index from the wavelength vs. intensity spectrum
+        current_index = current_index_data['index']
+        filtered_data = key[(key['substrate'] == selected_substrate) & 
+                            (key['pH'] == selected_ph) & 
+                            (key['solvent'] == selected_solvent) & 
+                            (key['substrate_concentration'] == selected_concentration)]
+        # if data has been found: 
+        if not filtered_data.empty:
+            current_entry = filtered_data.iloc[current_index]
+            current_push = current_entry['push']
+            if wavelength is not None:
+                fig = plotting_dash.plot_specified_wavelength_traces(key, current_push, [wavelength], start_time=slider_value[0], time_cutoff=slider_value[1])
+
+        return fig
+
         
     @app.callback(
     [
