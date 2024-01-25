@@ -1,5 +1,5 @@
 from dash import dcc, html
-from sidebar import create_sidebar
+from dash_app.sidebar import create_sidebar
 
 def create_layout(key):
     # initialize sidebar

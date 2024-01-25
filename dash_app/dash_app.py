@@ -1,6 +1,6 @@
 from dash import Dash
-from layout import create_layout
-from callbacks import register_callbacks
+from dash_app.layout import create_layout
+from dash_app.callbacks import register_callbacks
 
 def create_dash_app(key):
     app = Dash(__name__)
