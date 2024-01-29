@@ -1,9 +1,10 @@
+import dash_bootstrap_components as dbc
 from dash import Dash
 from dash_app.layout import create_layout
 from dash_app.callbacks import register_callbacks
 
 def create_dash_app(key):
-    app = Dash(__name__)
+    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
     app.layout = create_layout(key) 
     return app
 

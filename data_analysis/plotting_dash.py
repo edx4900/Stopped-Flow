@@ -106,7 +106,7 @@ def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concent
         title={
             'text': f"Experiment: {push_number} (Date: {experiment_date})",
             'font': {
-                'family': 'Times New Roman',
+                'family': 'Arial',
                 'size': 18
         }
     },
@@ -114,7 +114,7 @@ def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concent
         yaxis_title="Intensity",
         xaxis=dict(range=[first_wavelength, last_wavelength]),
         font=dict(
-            family="Times New Roman",
+            family="Arial",
             size=12
         )
     )
@@ -161,7 +161,7 @@ def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=
         title={
             'text': f"Wavelength Traces for {push_number}",
             'font': {
-                'family': 'Times New Roman',
+                'family': 'Arial',
                 'size': 18
             }
         },
@@ -169,7 +169,7 @@ def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=
         yaxis_title="Intensity",
         legend_title="Wavelength",
         font=dict(
-            family="Times New Roman",
+            family="Arial",
             size=12
         )
     )

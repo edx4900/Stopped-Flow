@@ -4,6 +4,28 @@ import plotly.graph_objs as go
 import data_analysis.plotting_dash as plotting_dash
 
 def register_callbacks(app, key):
+
+    # Add a callback to update the button text based on the click
+    @app.callback(
+        Output('toggle-x-axis', 'children'),
+        [Input('toggle-x-axis', 'n_clicks')]
+    )
+    def update_x_axis_button_text(n_clicks):
+        if n_clicks % 2 == 0:
+            return 'Log Time Scale'
+        else:
+            return 'Linear Time Scale'
+        
+    @app.callback(
+        Output("offcanvas", "is_open"),
+        Input("open-sidebar", "n_clicks"),
+        [State("offcanvas", "is_open")],
+    )
+    def toggle_offcanvas(n1, is_open):
+        if n1:
+            return not is_open
+        return is_open
+    
     # Callback to update dropdowns based on selected substrate
     @app.callback(
         [Output('ph-dropdown', 'options'),
@@ -60,6 +82,7 @@ def register_callbacks(app, key):
         # Enable input and button if data is available
         return not data_available, not data_available
     
+    
     # Callback to handle wavelength input and update the subplot
     @app.callback(
         Output('wavelength-plot-area', 'figure'),
@@ -71,7 +94,7 @@ def register_callbacks(app, key):
             Input('substrate-concentration-dropdown', 'value'),
             Input('time-slider', 'value'),
             Input('baseline-flag', 'data'),
-            Input('current-index', 'data') # do i leave as state or make into an input? 
+            Input('current-index', 'data')
         ],
         [
             State('wavelength-input', 'value'),
@@ -95,7 +118,7 @@ def register_callbacks(app, key):
 
         return fig
 
-        
+    # Callback to update the wavelength vs. intensity time course plot    
     @app.callback(
     [
         Output('plot-area', 'figure'),
