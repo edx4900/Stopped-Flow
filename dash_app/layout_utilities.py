@@ -57,15 +57,15 @@ def create_plots():
                 html.Span(id='plot-info', children='', style={'display': 'none', 'margin-right': '5px', 'margin-left': '5px'}),
                 html.Button('▶', id='next-button', disabled=True, style={'margin-left': '5px'})
             ], style={'text-align': 'center', 'margin-top': '10px'})
-
-        ], style={'position': 'relative'}),
+        ], style={'position': 'relative', 'margin-top': '50px'}),  # Ensure consistent top margin
         
         html.Div([
-            dcc.Input(id='wavelength-input', type='number', placeholder='Enter a wavelength', disabled=True),
-            html.Button('Add Wavelength Trace', id='add-wavelength-button', disabled=True),
+            dcc.Input(id='wavelength-input', type='text', placeholder='Enter wavelengths', 
+                      style={'position': 'absolute', 'top': '385px', 'right': '20px', 'width': '150px', 'zIndex': '1000'}),  # Adjusted input size and position
             dcc.Graph(id='wavelength-plot-area'),
+            html.Div(id='x-axis-scale', style={'display': 'none'}, children='linear'),
             html.Button('Log Time Scale', id='toggle-x-axis', n_clicks=0, disabled=True),
-        ], style={'text-align': 'center', 'margin-top': '50px'})
+        ], style={'text-align': 'center', 'margin-top': '50px'})  # Keep consistent with the other plot
     ], style={'display': 'grid', 'grid-template-columns': '1fr 1fr', 'margin-bottom': '20px'})
 
     return plots

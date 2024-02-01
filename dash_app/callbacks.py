@@ -4,17 +4,36 @@ import plotly.graph_objs as go
 import data_analysis.plotting_dash as plotting_dash
 
 def register_callbacks(app, key):
-
-    # Add a callback to update the button text based on the click
+# Add a callback to update the button text based on the current scale
     @app.callback(
         Output('toggle-x-axis', 'children'),
-        [Input('toggle-x-axis', 'n_clicks')]
+        [Input('x-axis-scale', 'children')]  # Depend on the x-axis scale state
     )
-    def update_x_axis_button_text(n_clicks):
-        if n_clicks % 2 == 0:
-            return 'Log Time Scale'
-        else:
-            return 'Linear Time Scale'
+    def update_x_axis_button_text(current_scale):
+        return 'Switch to Log Time Scale' if current_scale == 'linear' else 'Switch to Linear Time Scale'
+
+    # Add a callback to update the scale based on the click
+    @app.callback(
+        Output('x-axis-scale', 'children'),
+        [Input('toggle-x-axis', 'n_clicks')],
+        [State('x-axis-scale', 'children')]
+    )
+    def toggle_x_axis_scale(n_clicks, current_scale):
+        if n_clicks is None or n_clicks == 0:  # Handle the initial state where n_clicks could be None or 0
+            return 'linear'  # Default to linear scale
+
+        # Toggle between 'linear' and 'log' scale based on the current scale
+        return 'log' if current_scale == 'linear' else 'linear'
+    
+    @app.callback(
+        Output('toggle-x-axis', 'disabled'),
+        [Input('wavelength-input', 'value')]
+
+    )
+    def enable_time_toggle(wavelengths_str):
+        # Enable the toggle button if wavelengths_str is not None or empty
+        return not wavelengths_str
+
         
     @app.callback(
         Output("offcanvas", "is_open"),
@@ -26,6 +45,7 @@ def register_callbacks(app, key):
             return not is_open
         return is_open
     
+
     # Callback to update dropdowns based on selected substrate
     @app.callback(
         [Output('ph-dropdown', 'options'),
@@ -60,8 +80,7 @@ def register_callbacks(app, key):
         return {'baseline': 'baseline' in toggle_value}
     
     @app.callback(
-        [Output('wavelength-input', 'disabled'),
-        Output('add-wavelength-button', 'disabled')],
+        [Output('wavelength-input', 'disabled')],
         [Input('plot-area', 'figure')],
         [State('substrate-dropdown', 'value'),
         State('ph-dropdown', 'value'),
@@ -80,43 +99,44 @@ def register_callbacks(app, key):
             data_available = not filtered_data.empty
 
         # Enable input and button if data is available
-        return not data_available, not data_available
+        return not data_available, 
     
     
     # Callback to handle wavelength input and update the subplot
     @app.callback(
         Output('wavelength-plot-area', 'figure'),
         [
-            Input('add-wavelength-button', 'n_clicks'),
+            Input('wavelength-input', 'value'),
             Input('substrate-dropdown', 'value'),
             Input('ph-dropdown', 'value'),
             Input('solvent-dropdown', 'value'),
             Input('substrate-concentration-dropdown', 'value'),
             Input('time-slider', 'value'),
             Input('baseline-flag', 'data'),
-            Input('current-index', 'data')
+            Input('x-axis-scale', 'children')
         ],
-        [
-            State('wavelength-input', 'value'),
-        ]
+        [State('current-index', 'data')]  # Get the current x-axis scale from the hidden Div
     )
-    def update_wavelength_plot(n_clicks, selected_substrate, selected_ph, selected_solvent, selected_concentration, slider_value, baseline_flag_data, current_index_data, wavelength):
-        # Initialize default states
+    def update_wavelength_plot(wavelengths_str, selected_substrate, selected_ph, selected_solvent, selected_concentration, slider_value, baseline_flag_data, xaxis_scale, current_index_data):
+    # Rest of your existing callback code...
         fig = go.Figure()
-        # Get data for current index from the wavelength vs. intensity spectrum
         current_index = current_index_data['index']
         filtered_data = key[(key['substrate'] == selected_substrate) & 
                             (key['pH'] == selected_ph) & 
                             (key['solvent'] == selected_solvent) & 
                             (key['substrate_concentration'] == selected_concentration)]
-        # if data has been found: 
-        if not filtered_data.empty:
+
+        if not filtered_data.empty and wavelengths_str:
+            # Split the wavelengths string into a list
+            wavelengths = [float(w.strip()) for w in wavelengths_str.split(',') if w.strip()]
             current_entry = filtered_data.iloc[current_index]
             current_push = current_entry['push']
-            if wavelength is not None:
-                fig = plotting_dash.plot_specified_wavelength_traces(key, current_push, [wavelength], start_time=slider_value[0], time_cutoff=slider_value[1])
+
+            # Determine the x-axis scale based on the toggle button text
+            fig = plotting_dash.plot_specified_wavelength_traces(key, current_push, wavelengths, start_time=slider_value[0], time_cutoff=slider_value[1], xaxis_type=xaxis_scale)
 
         return fig
+
 
     # Callback to update the wavelength vs. intensity time course plot    
     @app.callback(

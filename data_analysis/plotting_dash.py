@@ -105,24 +105,24 @@ def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concent
     fig.update_layout(
         title={
             'text': f"Experiment: {push_number} (Date: {experiment_date})",
-            'font': {
-                'family': 'Arial',
-                'size': 18
-        }
+        #     'font': {
+        #         'family': 'Arial',
+        #         'size': 18
+        # }
     },
         xaxis_title="Wavelength (nm)",
         yaxis_title="Intensity",
         xaxis=dict(range=[first_wavelength, last_wavelength]),
-        font=dict(
-            family="Arial",
-            size=12
-        )
+        # font=dict(
+        #     family="Arial",
+        #     size=12
+        # )
     )
 
     return fig
 
 
-def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=None, start_time=None):
+def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=None, start_time=None, xaxis_type='linear'):
     """
     Plots specified wavelength traces from the dataset using Plotly.
     Args:
@@ -156,7 +156,7 @@ def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=
         # Add the trace to the figure
         fig.add_trace(go.Scatter(x=data['Time'], y=data[closest_wavelength], mode='lines', name=f"{closest_wavelength} nm"))
 
-    # Update the layout
+    # Update the layout with the x-axis type
     fig.update_layout(
         title={
             'text': f"Wavelength Traces for {push_number}",
@@ -166,6 +166,7 @@ def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=
             }
         },
         xaxis_title="Time",
+        xaxis_type=xaxis_type,  # Set the x-axis type to 'log' or 'linear'
         yaxis_title="Intensity",
         legend_title="Wavelength",
         font=dict(
