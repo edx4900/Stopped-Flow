@@ -3,6 +3,12 @@ import dash
 import plotly.graph_objs as go
 import data_analysis.plotting_dash as plotting_dash
 
+LAYOUT = go.Layout(
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)',
+    font=dict(color='rgb(255,255,255)'),
+)
+
 def register_callbacks(app, key):
 # Add a callback to update the button text based on the current scale
     @app.callback(
@@ -118,8 +124,8 @@ def register_callbacks(app, key):
         [State('current-index', 'data')]  # Get the current x-axis scale from the hidden Div
     )
     def update_wavelength_plot(wavelengths_str, selected_substrate, selected_ph, selected_solvent, selected_concentration, slider_value, baseline_flag_data, xaxis_scale, current_index_data):
-    # Rest of your existing callback code...
-        fig = go.Figure()
+    # Rest of existing callback code...
+        fig = go.Figure(layout=LAYOUT)
         current_index = current_index_data['index']
         filtered_data = key[(key['substrate'] == selected_substrate) & 
                             (key['pH'] == selected_ph) & 
@@ -172,7 +178,7 @@ def register_callbacks(app, key):
         current_index = current_index_data['index']
 
         # Initialize default states
-        fig = go.Figure()
+        fig = go.Figure(layout=LAYOUT)
         disable_previous, disable_next, slider_disabled, time_step_slider_disabled = True, True, True, True
         min_time, max_time = 0, 1
         slider_marks = {0: '0', 1: '1'}

@@ -2,11 +2,22 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 from dash import dcc
 
+STYLE={
+    'width': '15%',  # Example width
+    'height': '40px',  # Example height
+    'border': '1px solid #100F0F',  # Example border styling
+    'border-radius': '5px',  # Rounded corners
+    'padding': '10px',  # Inner space
+    'margin': '5px',  # Outer space
+    'background-color': '#100F0F',  # Background color
+    'color': '#5296D5'  # Text color
+}
+
 def create_sidebar(key):
-    # Define your sidebar layout here using Dash Bootstrap Components
+    # Define sidebar layout using Dash Bootstrap Components
     sidebar = html.Div(
         [
-            html.Button("Open Experiment Panel", id="open-sidebar", n_clicks=0),
+            dbc.Button("Open Experiment Panel", id="open-sidebar", n_clicks=0),
             dbc.Offcanvas(
                 html.P(
                     "Experiments will go here"
@@ -53,18 +64,30 @@ def create_plots():
                 style={'position': 'absolute', 'top': '50px', 'right': '10px', 'zIndex': '1000'}
             ),
             html.Div([
-                html.Button('◀', id='previous-button', disabled=True, style={'margin-right': '5px'}),
+                dbc.Button('◀', id='previous-button', disabled=True, style={'margin-right': '5px'}),
                 html.Span(id='plot-info', children='', style={'display': 'none', 'margin-right': '5px', 'margin-left': '5px'}),
-                html.Button('▶', id='next-button', disabled=True, style={'margin-left': '5px'})
+                dbc.Button('▶', id='next-button', disabled=True, style={'margin-left': '5px'})
             ], style={'text-align': 'center', 'margin-top': '10px'})
         ], style={'position': 'relative', 'margin-top': '50px'}),  # Ensure consistent top margin
         
         html.Div([
             dcc.Input(id='wavelength-input', type='text', placeholder='Enter wavelengths', 
-                      style={'position': 'absolute', 'top': '385px', 'right': '20px', 'width': '150px', 'zIndex': '1000'}),  # Adjusted input size and position
+                      style={
+                          'position': 'absolute', 
+                          'top': '385px', 
+                          'right': '20px', 
+                          'width': '170px', 
+                          'zIndex': '1000',
+                          'border': '1px solid #100F0F',  # Example border styling
+                          'border-radius': '5px',  # Rounded corners
+                          'padding': '10px',  # Inner space
+                          'margin': '5px',  # Outer space
+                          'background-color': '#100F0F',  # Background color
+                          'color': '#5296D5'  # Text color
+                          }),  # Adjusted input size and position
             dcc.Graph(id='wavelength-plot-area'),
             html.Div(id='x-axis-scale', style={'display': 'none'}, children='linear'),
-            html.Button('Log Time Scale', id='toggle-x-axis', n_clicks=0, disabled=True),
+            dbc.Button('Log Time Scale', id='toggle-x-axis', n_clicks=0, disabled=True),
         ], style={'text-align': 'center', 'margin-top': '50px'})  # Keep consistent with the other plot
     ], style={'display': 'grid', 'grid-template-columns': '1fr 1fr', 'margin-bottom': '20px'})
 

@@ -3,6 +3,12 @@ import plotly.express as px
 import plotly.graph_objs as go
 import pandas as pd
 
+LAYOUT = go.Layout(
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)',
+    font=dict(color='rgb(255,255,255)'),
+)
+
 # Function to fetch the time range for an experiment
 def get_time_range_for_experiment(key, substrate, pH=None, substrate_concentration=None, solvent=None, index=None):
     # Fetch experiments based on the criteria
@@ -28,9 +34,9 @@ def plot_wavelength_vs_intensity_dash(key, substrate, pH=None, substrate_concent
     experiments = get_experiments_by_criteria(key, **criteria)
 
     if experiments.empty or index is None or index >= len(experiments):
-        return go.Figure()  # Return an empty figure if no valid experiment is found
+        return go.Figure(layout=LAYOUT)  # Return an empty figure if no valid experiment is found
 
-    fig = go.Figure()
+    fig = go.Figure(layout=LAYOUT)
 
     # Select the specific experiment based on the index
     experiment = experiments.iloc[index]
@@ -146,7 +152,7 @@ def plot_specified_wavelength_traces(key, push_number, wavelengths, time_cutoff=
         data = filtered_data
 
     # Create a Plotly figure
-    fig = go.Figure()
+    fig = go.Figure(layout=LAYOUT)
 
     # Plot each specified wavelength
     for desired_wavelength in wavelengths:

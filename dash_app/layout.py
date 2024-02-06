@@ -11,7 +11,8 @@ def create_layout(key):
             create_dropdowns(key),
             create_plots(),
             create_sliders(),
-        ], fluid=True),
+        ], fluid=True,
+        className="dbc")
     ])
 
     return layout
